@@ -1,4 +1,9 @@
 #include "lib-engine/engine80.hpp"
+#include "lib-engine/application_context.hpp"
+#include "lib-engine/platform_interface.hpp"
+#include "lib-engine/vulkan_graphics.hpp"
+#include "lib-engine/class_ids.hpp"
+
 #include <SDL.h>
 #include <iostream>
 #include <thread>
@@ -6,7 +11,33 @@
 
 glm::vec3 val{};
 
+namespace e80
+{
+    class Sdl2PlatformInterface;
+}
+
+using namespace e80;
+
 int main() {
+
+    e80::registerFactories();
+
+    //auto appContext = e80::CreateInstance<e80::ApplicationContextClass>();
+    //e80::IApplicationContext::SetApplicationContext(appContext);
+
+    //auto platform = std::make_shared<e80::Sdl2PlatformInterfaceClass>();
+
+    auto platform = createInstance<PlatformInterface>(e80::Sdl2PlatformInterfaceClassId);
+    platform->initialize();
+
+    auto graphics = std::make_shared<vulk::VulkanGraphics>(*platform);
+    graphics->initialize();
+
+    //appContext->RegisterService(std::move(graphics), "graphics");
+
+    //auto graphics = e80::GetApplicationContext().GetServiceByName<e80::IGraphics>("graphics").value_or(nullptr);
+    //graphics->Initialize();
+
 
     int result;
     if ((result = SDL_Init(SDL_INIT_VIDEO)))
@@ -21,8 +52,8 @@ int main() {
     auto window = SDL_CreateWindow("game"
         , SDL_WINDOWPOS_CENTERED
         , SDL_WINDOWPOS_CENTERED
-        , 1024
-        , 768
+        , 1920
+        , 1080
         , flags)
         ;
 
