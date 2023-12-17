@@ -125,6 +125,8 @@ Expected<void> VulkanGraphics::createInstance() {
 
 
 	TRY_VKEXPR(vkCreateInstance(&createInfo, nullptr, &instance_));
+	log::info("vkCreateInstance success!");
+
 	return {};
 }
 
