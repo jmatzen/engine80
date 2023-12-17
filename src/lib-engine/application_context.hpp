@@ -1,9 +1,13 @@
 #pragma once
 
 #include "engine80.hpp"
+#include <optional>
 
 namespace qf {
+	class ApplicationContext;
+
 	struct IApplicationContext : public Serializable {
+
 		virtual Result RegisterService(std::shared_ptr<Serializable>&& obj, std::string&& contextName) = 0;
 
 		virtual Result GetServiceByName(std::string const & contextName, std::shared_ptr<Serializable>& objOut) const = 0;
@@ -11,6 +15,8 @@ namespace qf {
 		[[nodiscard]]
 		virtual std::shared_ptr<Serializable> 
 			GetServiceByName(std::string const& serviceName) const = 0;
+
+		virtual std::optional<bool> getPropertyAsBool(const std::string_view& name) const = 0;
 
 
 		//template<typename T>
@@ -28,6 +34,7 @@ namespace qf {
 
 		static void SetApplicationContext(std::shared_ptr<IApplicationContext> const & context);
 
+		static ptr<IApplicationContext> getContext();
 	};
 
 	struct ApplicationContextClass {

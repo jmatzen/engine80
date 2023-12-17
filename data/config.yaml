@@ -1,0 +1,4 @@
+graphics:
+  vulkan:
+    enable-validation: true
+    

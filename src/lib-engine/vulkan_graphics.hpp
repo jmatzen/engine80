@@ -4,8 +4,6 @@
 
 namespace qf::vulk
 {
-	template<typename T>
-	using strexpected = std::expected<T, std::string>;
 
 	std::string const& getStringForVkResult(VkResult value);
 
@@ -20,16 +18,17 @@ namespace qf::vulk
 
 		VkInstance instance_{};
 		VkDebugUtilsMessengerEXT debugMessenger_{};
+		bool useVulkanValidation_ = false;
 
 		CreateInstanceInfo cii_;
 
 		constexpr static UUID uuid = UUID("123e4567-e89b-12d3-a456-426614174000");
 
 		[[nodiscard]]
-		strexpected<void> createInstance();
+		Expected<void> createInstance();
 
 		[[nodiscard]]
-		static strexpected<std::vector<std::string>> getInstanceExtensions();
+		static Expected<std::vector<std::string>> getInstanceExtensions();
 
 		[[nodiscard]]
 		static bool hasRequiredExtensions(const std::vector<std::string>& extensions);
@@ -37,13 +36,15 @@ namespace qf::vulk
 		[[nodiscard]] 
 		static bool hasValidationLayerSupport();
 
-		strexpected<void> setupDebugLogging();
+		Expected<void> setupDebugLogging();
+
+		void config();
 
 	public:
 		VulkanGraphics(const CreateInstanceInfo& info);
 		virtual ~VulkanGraphics() override;
 
-		virtual std::expected<void,std::string> initialize() override;
+		virtual Expected<void> initialize() override;
 
 
 	};

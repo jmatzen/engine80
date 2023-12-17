@@ -54,14 +54,7 @@ namespace qf {
 			return true;
 		}
 
-		virtual std::expected<void, Result> postConstruct() override {
-			return {};
-		}
 
-		template<typename T>
-		static std::string conv(T&& p) {
-			return std::string(p);
-		}
 		virtual std::expected<std::vector<std::string>, std::string> getVulkanInstanceExtensions() const override {
 			u32 count;
 			SDL_Vulkan_GetInstanceExtensions(window_, &count, nullptr);

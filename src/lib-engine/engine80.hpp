@@ -49,12 +49,12 @@ struct std::formatter<std::vector<T>> {
 //};
 
 
-#define TRY_EXPR(expr) if (auto res = expr; not res.has_value()) return std::unexpected(res.error());
+#define TRY_EXPR(expr) if (auto&& res = expr; not res.has_value()) return std::unexpected(Err(res.error().str()));
 
 /*
 * propagate a vkresult result as a string message error in a std::expected result
 */
-#define TRY_VKEXPR(expr) if (auto res = expr; res!=VK_SUCCESS) return std::unexpected(getStringForVkResult(res));
+#define TRY_VKEXPR(expr) if (auto&& res = expr; res!=VK_SUCCESS) return std::unexpected(getStringForVkResult(res));
 
 
 namespace qf {
@@ -81,6 +81,34 @@ namespace qf {
 	class Archive;
 	class Serializable;
 
+	//using Err = std::string;
+
+	class Err
+	{
+		std::string err_;
+	public:
+		Err(const char* val)
+			: err_(val) {}
+
+		Err(std::string const& val)
+			: err_(val) {}
+
+		Err(std::string&& val)
+			: err_(std::move(val)) {}
+
+		Err(Err&& e)
+			: err_(std::move(e.err_)) {}
+
+		Err(const Err& e)
+			: err_(e.err_) {}
+
+
+
+		std::string str() const { return err_; }
+	};
+
+	template<typename T>
+	using Expected = std::expected<T, Err>;
 }
 
 
@@ -141,7 +169,7 @@ namespace qf
 
 	class Serializable : public EnableSharedFromThis<Serializable> {
 	public:
-		virtual std::expected<void, Result> postConstruct() { return {}; }
+		virtual std::expected<void, std::string> postConstruct() { return {}; }
 
 		Serializable(Archive&);
 

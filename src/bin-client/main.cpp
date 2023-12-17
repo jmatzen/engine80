@@ -30,7 +30,7 @@ int main() {
 
     qf::registerFactories();
 
-    //auto appContext = e80::CreateInstance<e80::ApplicationContextClass>();
+    auto appContext = qf::internalCreateInstance<qf::ApplicationContext>();
     //e80::IApplicationContext::SetApplicationContext(appContext);
 
     //auto platform = std::make_shared<e80::Sdl2PlatformInterfaceClass>();

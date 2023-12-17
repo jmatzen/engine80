@@ -6,7 +6,7 @@ namespace qf {
 
 	struct Graphics : public Serializable
 	{
-		virtual std::expected<void,std::string> initialize() = 0;
+		virtual Expected<void> initialize() = 0;
 
 		struct CreateInstanceInfo {
 			weak<PlatformInterface> pi;

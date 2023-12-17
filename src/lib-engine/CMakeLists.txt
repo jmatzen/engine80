@@ -12,3 +12,6 @@ target_link_libraries(lib-engine PRIVATE Vulkan::Vulkan GPUOpen::VulkanMemoryAll
    # Or use the header-only version
 #find_package(spdlog CONFIG REQUIRED)
 #target_link_libraries(lib-engine PRIVATE spdlog::spdlog_header_only)
+
+find_package(yaml-cpp CONFIG REQUIRED)
+target_link_libraries(lib-engine PRIVATE yaml-cpp::yaml-cpp)
