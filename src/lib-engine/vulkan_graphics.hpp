@@ -1,19 +1,43 @@
 #include "graphics.hpp"
 #include "platform_interface.hpp"
+#include <vulkan/vulkan.h>
 
 namespace e80::vulk
 {
+	template<typename T>
+	using strexpected = std::expected<T, std::string>;
+
+	std::string const& getStringForVkResult(VkResult value);
+
+	inline std::expected<void, std::string> vkchk(VkResult arg) {
+		if (arg == VK_SUCCESS)
+			return {};
+		return std::unexpected(getStringForVkResult(arg));
+	}
+
 	class VulkanGraphics : public Graphics {
-		std::weak_ptr<PlatformInterface> platform_;
+
+		VkInstance instance_{};
+		CreateInstanceInfo cii_;
 
 		constexpr static UUID uuid = UUID("123e4567-e89b-12d3-a456-426614174000");
 
+		[[nodiscard]]
+		strexpected<void> createInstance();
 
+		[[nodiscard]]
+		static strexpected<std::vector<std::string>> getInstanceExtensions();
 
+		[[nodiscard]]
+		static bool hasRequiredExtensions(const std::vector<std::string>& extensions);
+
+		[[nodiscard]] 
+		static bool hasValidationLayerSupport();
 	public:
-		VulkanGraphics(PlatformInterface& platform);
+		VulkanGraphics(const CreateInstanceInfo& info);
+		virtual ~VulkanGraphics() override;
 
-		virtual std::expected<void,std::exception> initialize() override;
+		virtual std::expected<void,std::string> initialize() override;
 
 
 	};

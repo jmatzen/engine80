@@ -32,12 +32,32 @@ template<> struct std::formatter<glm::vec3> {
 //};
 
 
+#define TRY_EXPR(expr) if (auto res = expr; not res.has_value()) return std::unexpected(res.error());
+
+/*
+* propagate a vkresult result as a string message error in a std::expected result
+*/
+#define TRY_VKEXPR(expr) if (auto res = expr; res!=VK_SUCCESS) return std::unexpected(getStringForVkResult(res));
+
+
 namespace e80 {
+	using u8 = uint8_t;
+	using u16 = uint16_t;
+	using u32 = uint32_t;
+	using u64 = uint64_t;
+	using s8 = int8_t;
+	using s16 = int16_t;
+	using s32 = int32_t;
+	using s64 = int64_t;
+
 	template<typename T>
 	using ptr = std::shared_ptr<T>;
 
 	template<typename T>
 	using up = std::unique_ptr<T>;
+
+	template<typename T>
+	using weak = std::weak_ptr<T>;
 
 	class Graphics;
 	class PlatformInterface;
