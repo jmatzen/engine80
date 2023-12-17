@@ -1,26 +1,49 @@
 #include "vulkan_graphics.hpp"
+#include "logger.hpp"
+
 #include <ranges>
 #include <array>
 
-using namespace e80;
-using namespace e80::vulk;
+using namespace qf;
+using namespace qf::vulk;
 
 namespace
 {
-	static auto requiredVulkanExtensions = { "VK_KHR_surface", "VK_KHR_win32_surface" };
+	static auto requiredVulkanExtensions = { "VK_KHR_surface", "VK_KHR_win32_surface", VK_EXT_DEBUG_UTILS_EXTENSION_NAME };
 	static auto validationLayers = { "VK_LAYER_KHRONOS_validation" };
-
 }
 
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+	VkDebugUtilsMessageTypeFlagsEXT messageType,
+	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+	void* pUserData) {
+
+	log::info("{}", pCallbackData->pMessage);
+
+	return VK_FALSE;
+}
+
+template<>
+struct std::formatter<VkLayerProperties> {
+	constexpr auto parse(auto& ctx) -> decltype(ctx.begin()) {
+		return ctx.end();
+	}
+	auto format(auto&& val, auto&& ctx) -> decltype(ctx.out()) {
+		return format_to(ctx.out(), "{}", val.layerName);
+	}
+};
 
 VulkanGraphics::VulkanGraphics(const CreateInstanceInfo& info)
 	: cii_(info)
 {
+	log::info("creating vulkan");
 }
 
 std::expected<void, std::string> VulkanGraphics::initialize()
 {
 	TRY_EXPR(createInstance());
+	TRY_EXPR(setupDebugLogging());
 
 
 	return {};
@@ -31,12 +54,15 @@ bool VulkanGraphics::hasValidationLayerSupport() {
 	vkEnumerateInstanceLayerProperties(&count, nullptr);
 	std::vector<VkLayerProperties> layers(count);
 	vkEnumerateInstanceLayerProperties(&count, layers.data());
+	log::info("instance layers: {}", layers);
 
 	for (const auto& layer : layers) {
 		if (strcmp("VK_LAYER_KHRONOS_validation", layer.layerName) == 0) {
+			log::info("has validation");
 			return true;
 		}
 	}
+	log::info("missing validation layer");
 	return false;
 }
 
@@ -47,10 +73,13 @@ strexpected<void> VulkanGraphics::createInstance() {
 		return std::unexpected(extensions.error());
 	}
 
+	log::info("extensions: {}", extensions.value());
+
 	//bool hasThem = hasRequiredExtentions(extensions);
 	if (auto res = hasRequiredExtensions(extensions.value()); !res) {
 		return std::unexpected("missing extensions");
 	}
+
 
 	VkApplicationInfo appInfo{
 		.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -83,10 +112,15 @@ strexpected<void> VulkanGraphics::createInstance() {
 
 VulkanGraphics::~VulkanGraphics() 
 {
+	if (debugMessenger_) {
+		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance_, "vkDestroyDebugUtilsMessengerEXT");
+		if (func != nullptr) {
+			func(instance_, debugMessenger_, nullptr);
+		}
+	}
 	if (instance_) {
 		vkDestroyInstance(instance_, nullptr);
 	}
-
 }
 
 bool VulkanGraphics::hasRequiredExtensions(const std::vector<std::string>& extensions)
@@ -122,6 +156,21 @@ strexpected<std::vector<std::string>> VulkanGraphics::getInstanceExtensions()
 
 }
 
+strexpected<void> VulkanGraphics::setupDebugLogging()
+{
+	VkDebugUtilsMessengerCreateInfoEXT ci{};
+	ci.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	ci.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+	ci.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+	ci.pfnUserCallback = debugCallback;
+
+	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance_, "vkCreateDebugUtilsMessengerEXT");
+	if (func) {
+		auto result = func(instance_, &ci, nullptr, &debugMessenger_);
+		TRY_VKEXPR(result);
+	}
+	return {};
+}
 // --------------------------------------------------------------------------
 
 template<>

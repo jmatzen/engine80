@@ -5,27 +5,27 @@
 
 #include <unordered_map>
 
-using namespace e80;
+using namespace qf;
 
-namespace e80
+namespace qf
 {
 	class Sdl2PlatformInterface;
 	
 	std::unordered_map<UUID, ptr<AbstractClassFactory>> factoryMap;
 }
 
-void e80::registerFactories()
+void qf::registerFactories()
 {
 	registerFactory<Sdl2PlatformInterface>();
 
 }
 
-void e80::registerFactory(const UUID& clsid, ptr<AbstractClassFactory> const& cf)
+void qf::registerFactory(const UUID& clsid, ptr<AbstractClassFactory> const& cf)
 {
 	factoryMap.emplace(clsid, cf);
 }
 
-ptr<Serializable> e80::createInstance_(const UUID& clsid) {
+ptr<Serializable> qf::createInstance_(const UUID& clsid) {
 	auto it = factoryMap.find(clsid);
 	if (it == factoryMap.end()) {
 		return nullptr;

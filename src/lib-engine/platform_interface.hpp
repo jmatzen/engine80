@@ -4,7 +4,7 @@
 
 #include <vector>
 
-namespace e80 
+namespace qf 
 {
 	class PlatformInterface : public Serializable
 	{

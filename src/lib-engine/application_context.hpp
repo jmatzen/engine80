@@ -2,7 +2,7 @@
 
 #include "engine80.hpp"
 
-namespace e80 {
+namespace qf {
 	struct IApplicationContext : public Serializable {
 		virtual Result RegisterService(std::shared_ptr<Serializable>&& obj, std::string&& contextName) = 0;
 

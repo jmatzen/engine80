@@ -8,6 +8,7 @@
 #include <format>
 #include <memory>
 #include <expected>
+#include <vector>
 
 #include <glm/common.hpp>
 #include <glm/vec3.hpp>
@@ -20,6 +21,22 @@ template<> struct std::formatter<glm::vec3> {
 		return format_to(ctx.out(), "({},{},{})", val.x, val.y, val.z);
 	}
 };
+
+template<typename T>
+struct std::formatter<std::vector<T>> {
+	constexpr auto parse(auto& ctx) -> decltype(ctx.begin()) {
+		return ctx.end();
+	}
+	auto format(auto&& val, auto&& ctx) -> decltype(ctx.out()) {
+		std::string res = "[\n";
+		for (auto const& item : val) {
+			res += "   \"" + std::format("{}",item) + "\",\n";
+		}
+		res += "]\n";
+		return format_to(ctx.out(), "{}", res);
+	}
+};
+
 
 //template<> struct std::formatter<e80::UUID> {
 //	constexpr auto parse(auto& ctx) -> decltype(ctx.begin()) {
@@ -40,7 +57,7 @@ template<> struct std::formatter<glm::vec3> {
 #define TRY_VKEXPR(expr) if (auto res = expr; res!=VK_SUCCESS) return std::unexpected(getStringForVkResult(res));
 
 
-namespace e80 {
+namespace qf {
 	using u8 = uint8_t;
 	using u16 = uint16_t;
 	using u32 = uint32_t;
@@ -67,7 +84,7 @@ namespace e80 {
 }
 
 
-namespace e80 
+namespace qf 
 {
 	class AbstractClassFactory;
 
@@ -144,30 +161,30 @@ namespace e80
 	static IApplicationContext& GetApplicationContext();
 
 	
-	template<typename T> [[nodiscard]] ptr<e80::Serializable> internalCreateInstance_() {
+	template<typename T> [[nodiscard]] ptr<qf::Serializable> internalCreateInstance_() {
 		auto obj = std::make_shared<T>();
 		obj->postConstruct();
 		return obj;
 	}
 
-	template<typename T, UUID const&> [[nodiscard]] ptr<e80::Serializable> internalCreateInstanceById_() {
+	template<typename T, UUID const&> [[nodiscard]] ptr<qf::Serializable> internalCreateInstanceById_() {
 		auto obj = std::make_shared<T>();
 		obj->postConstruct();
 		return obj;
 	}
 
-	template<typename T> ptr<e80::Serializable> internalCreateInstance();
+	template<typename T> ptr<qf::Serializable> internalCreateInstance();
 
-	template<UUID const &> ptr<e80::Serializable> internalCreateInstanceById();
+	template<UUID const &> ptr<qf::Serializable> internalCreateInstanceById();
 
 }
 
 #define IMPLEMENT_CLASS_FACTORY(C) \
-	template<> e80::ptr<e80::Serializable> e80::internalCreateInstance<C>() { \
-		return e80::internalCreateInstance_<C>(); \
+	template<> qf::ptr<qf::Serializable> qf::internalCreateInstance<C>() { \
+		return qf::internalCreateInstance_<C>(); \
 	}
 
 #define IMPLEMENT_CLASS_FACTORY_UUID(C, ID) \
-	template<> e80::ptr<e80::Serializable> e80::internalCreateInstanceById<ID>() { \
-		return e80::internalCreateInstanceById_<C,ID>(); \
+	template<> qf::ptr<qf::Serializable> qf::internalCreateInstanceById<ID>() { \
+		return qf::internalCreateInstanceById_<C,ID>(); \
 	}

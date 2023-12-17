@@ -2,7 +2,7 @@
 
 #include "engine80.hpp"
 
-namespace e80 {
+namespace qf {
 
 	struct Graphics : public Serializable
 	{

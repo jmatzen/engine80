@@ -4,6 +4,8 @@
 
 namespace
 {
+	std::string unknown = "<unknown>";
+
 	std::unordered_map<VkResult, std::string> vulkResultMap {
 		std::make_pair(VK_SUCCESS,"VK_SUCCESS"),
 		std::make_pair(VK_NOT_READY,"VK_NOT_READY"),
@@ -55,15 +57,17 @@ namespace
 	};
 
 
+
+
 }
 
-namespace e80::vulk {
+namespace qf::vulk {
 	std::string const & getStringForVkResult(VkResult value)
 	{
 		auto it = vulkResultMap.find(value);
 		if (it == vulkResultMap.end())
 		{
-			return "<unknown>";
+			return unknown;
 		}
 		return it->second;
 	}

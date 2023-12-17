@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <array>
 
-namespace e80
+namespace qf
 {
 	namespace detail
 	{
@@ -64,9 +64,9 @@ namespace e80
 }
 
 template<>
-struct std::hash<e80::UUID>
+struct std::hash<qf::UUID>
 {
-	constexpr std::size_t operator()(const e80::UUID& k) const {
+	constexpr std::size_t operator()(const qf::UUID& k) const {
 		const uint32_t* p = &k.p0;
 		return p[0] ^ p[1] ^ p[2] ^ p[3];
 	}

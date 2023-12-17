@@ -3,35 +3,39 @@
 #include "lib-engine/platform_interface.hpp"
 #include "lib-engine/class_ids.hpp"
 #include "lib-engine/graphics.hpp"
+#include "lib-engine/logger.hpp"
 
 #include <SDL.h>
+
 #include <iostream>
 #include <thread>
 #include <chrono>
 
 glm::vec3 val{};
 
-namespace e80
+namespace qf
 {
     class Sdl2PlatformInterface;
 }
 
-namespace e80::vulk {
+namespace qf::vulk {
     class VulkanGraphics;
 }
 
-using namespace e80;
+using namespace qf;
 
 int main() {
 
-    e80::registerFactories();
+    log::info("hello");
+
+    qf::registerFactories();
 
     //auto appContext = e80::CreateInstance<e80::ApplicationContextClass>();
     //e80::IApplicationContext::SetApplicationContext(appContext);
 
     //auto platform = std::make_shared<e80::Sdl2PlatformInterfaceClass>();
 
-    auto platform = createInstance<PlatformInterface>(e80::Sdl2PlatformInterfaceClassId);
+    auto platform = createInstance<PlatformInterface>(qf::Sdl2PlatformInterfaceClassId);
     if (auto initRes = platform->initialize(); !initRes.has_value()) {
         std::cerr << initRes.error() << std::endl;
     }

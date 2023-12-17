@@ -2,16 +2,16 @@
 #include <unordered_map>
 
 
-namespace e80
+namespace qf
 {
 	class ApplicationContext;
 }
 
 namespace {
-	e80::ptr<e80::ApplicationContext> globalContext_;
+	qf::ptr<qf::ApplicationContext> globalContext_;
 }
 
-namespace e80 {
+namespace qf {
 	class ApplicationContext
 		: public IApplicationContext
 	{
@@ -55,4 +55,4 @@ namespace e80 {
 
 
 
-IMPLEMENT_CLASS_FACTORY(e80::ApplicationContext);
+IMPLEMENT_CLASS_FACTORY(qf::ApplicationContext);

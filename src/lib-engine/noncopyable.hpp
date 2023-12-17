@@ -1,6 +1,6 @@
 #pragma once
 
-namespace e80
+namespace qf
 {
 	class NonCopyable
 	{

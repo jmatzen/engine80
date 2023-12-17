@@ -2,7 +2,7 @@
 #include "platform_interface.hpp"
 #include <vulkan/vulkan.h>
 
-namespace e80::vulk
+namespace qf::vulk
 {
 	template<typename T>
 	using strexpected = std::expected<T, std::string>;
@@ -15,9 +15,12 @@ namespace e80::vulk
 		return std::unexpected(getStringForVkResult(arg));
 	}
 
+
 	class VulkanGraphics : public Graphics {
 
 		VkInstance instance_{};
+		VkDebugUtilsMessengerEXT debugMessenger_{};
+
 		CreateInstanceInfo cii_;
 
 		constexpr static UUID uuid = UUID("123e4567-e89b-12d3-a456-426614174000");
@@ -33,6 +36,9 @@ namespace e80::vulk
 
 		[[nodiscard]] 
 		static bool hasValidationLayerSupport();
+
+		strexpected<void> setupDebugLogging();
+
 	public:
 		VulkanGraphics(const CreateInstanceInfo& info);
 		virtual ~VulkanGraphics() override;

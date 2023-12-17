@@ -10,7 +10,7 @@
 #include <chrono>
 #include <ranges>
 
-namespace e80 {
+namespace qf {
 	class Sdl2PlatformInterface
 		: public PlatformInterface
 	{
@@ -77,10 +77,10 @@ namespace e80 {
 	};
 }
 
-IMPLEMENT_CLASS_FACTORY(e80::Sdl2PlatformInterface);
+IMPLEMENT_CLASS_FACTORY(qf::Sdl2PlatformInterface);
 
 template<>
-void e80::registerFactory<e80::Sdl2PlatformInterface>() {
+void qf::registerFactory<qf::Sdl2PlatformInterface>() {
 	//class Sdl2PlatformInterfaceClassFactory : public ClassFactory
 	//{
 	//	virtual ptr<Serializable> create() const override {
