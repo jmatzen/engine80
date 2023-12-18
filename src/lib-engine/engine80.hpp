@@ -49,13 +49,22 @@ struct std::formatter<std::vector<T>> {
 //};
 
 
-#define TRY_EXPR(expr) if (auto&& res = expr; not res.has_value()) return std::unexpected(Err(res.error().str()));
+#define TRY_EXPR(expr) do { if (auto&& res = expr; not res.has_value()) return std::unexpected(Err(res.error().str())); } while (0); 
+
 
 /*
 * propagate a vkresult result as a string message error in a std::expected result
 */
-#define TRY_VKEXPR(expr) if (auto&& res = expr; res!=VK_SUCCESS) return std::unexpected(getStringForVkResult(res));
+#define TRY_VKEXPR(expr) do { if (auto&& res = expr; res!=VK_SUCCESS) return std::unexpected(getStringForVkResult(res)); } while(0); 
 
+
+#define TRY_EXPR_(var,expr) \
+	do { \
+		auto temp = (expr); \
+		if (!temp.has_value()) \
+		return std::unexpected(temp.error()); \
+		var = temp.value(); \
+	} while (0);
 
 namespace qf {
 	using u8 = uint8_t;
@@ -109,6 +118,16 @@ namespace qf {
 
 	template<typename T>
 	using Expected = std::expected<T, Err>;
+
+	//template<typename... Args>
+	//std::unexpected<Args...> Unexpected(Args&&... args) {
+	//	return std::unexpected(args...);
+	//}
+
+	template<typename T>
+	auto Unexpected(T&& arg) -> std::unexpected<T> {
+		return std::unexpected(std::forward<T>(arg));
+	}
 }
 
 

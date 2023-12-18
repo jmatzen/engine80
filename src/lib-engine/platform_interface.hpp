@@ -17,7 +17,7 @@ namespace qf
 		*/
 		virtual bool update(float timeDelta) = 0;
 
-		virtual std::expected<std::vector<std::string>, std::string> getVulkanInstanceExtensions() const = 0;
+		virtual Expected<intptr_t> getNativeWindowHandle() const = 0;
 	};
 
 }

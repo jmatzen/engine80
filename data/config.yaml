@@ -1,4 +1,13 @@
 graphics:
   vulkan:
+    required-extensions:
+      vulkan:
+      - VK_KHR_surface
+      - VK_KHR_win32_surface
+      debug:
+      - VK_EXT_debug_utils
+      device:
+      - VK_KHR_swapchain
+    validation-layers:
+    - VK_LAYER_KHRONOS_validation
     enable-validation: true
-    

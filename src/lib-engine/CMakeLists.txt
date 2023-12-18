@@ -15,3 +15,5 @@ target_link_libraries(lib-engine PRIVATE Vulkan::Vulkan GPUOpen::VulkanMemoryAll
 
 find_package(yaml-cpp CONFIG REQUIRED)
 target_link_libraries(lib-engine PRIVATE yaml-cpp::yaml-cpp)
+
+add_definitions(/DVK_USE_PLATFORM_WIN32_KHR)

@@ -1,4 +1,7 @@
 #include "vulkan_graphics.hpp"
+#include "vulk_physical_device.hpp"
+#include "vulk_logical_device.hpp"
+#include "vulk_surface.hpp"
 #include "application_context.hpp"
 #include "logger.hpp"
 
@@ -13,7 +16,8 @@ namespace
 	static auto requiredVulkanExtensions = { "VK_KHR_surface", "VK_KHR_win32_surface"};
 	static auto requiredDebugExtensions = { VK_EXT_DEBUG_UTILS_EXTENSION_NAME };
 	static auto validationLayers = { "VK_LAYER_KHRONOS_validation" };
-	static const std::string_view ENABLE_VALIDATION_PROPERTY_NAME = "graphics.vulkan.enable-validation";
+	static const std::string_view ENABLE_VALIDATION_PROPERTY_NAME{ "graphics.vulkan.enable-validation" };
+
 
 }
 
@@ -49,13 +53,16 @@ void VulkanGraphics::config()
 	auto ctx = IApplicationContext::getContext();
 	this->useVulkanValidation_ = ctx->getPropertyAsBool(ENABLE_VALIDATION_PROPERTY_NAME).value_or(false);
 }
+
+
 Expected<void> VulkanGraphics::initialize()
 {
 	config();
 	TRY_EXPR(createInstance());
 	TRY_EXPR(setupDebugLogging());
-
-
+	TRY_EXPR_(surface_, Surface::create(*this));
+	TRY_EXPR_(physicalDevice_, PhysicalDevice::factory(*this));
+	TRY_EXPR_(logicalDevice_, LogicalDevice::create(*physicalDevice_));
 	return {};
 }
 
@@ -187,6 +194,18 @@ Expected<void> VulkanGraphics::setupDebugLogging()
 		}
 	}
 	return {};
+}
+
+Expected<void> VulkanGraphics::pickPhysicalDevice()
+{
+
+	return {};
+}
+
+Expected<intptr_t> VulkanGraphics::getNativeWindowHandle() const {
+	intptr_t h;
+	TRY_EXPR_(h, cii_.pi.lock()->getNativeWindowHandle());
+	return h;
 }
 // --------------------------------------------------------------------------
 

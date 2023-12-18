@@ -5,6 +5,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
+#include <SDL2/SDL_syswm.h>
 
 #include <thread>
 #include <chrono>
@@ -54,19 +55,29 @@ namespace qf {
 			return true;
 		}
 
-
-		virtual std::expected<std::vector<std::string>, std::string> getVulkanInstanceExtensions() const override {
-			u32 count;
-			SDL_Vulkan_GetInstanceExtensions(window_, &count, nullptr);
-			std::vector<const char*> arr(count);
-			SDL_Vulkan_GetInstanceExtensions(window_, &count, arr.data());
-			return arr 
-				| std::views::transform([](auto&& p) {	return std::string(p);}) 
-				| std::ranges::to<std::vector<std::string>>();
-			//return arr 
-			//	| std::views::transform(std::string{})
-			//	| std::ranges::to<std::vector<std::string>>();
+		virtual Expected<intptr_t> getNativeWindowHandle() const override {
+			SDL_SysWMinfo wmInfo{};
+			SDL_VERSION(&wmInfo.version);
+			if (SDL_GetWindowWMInfo(window_, &wmInfo)) {
+				if (wmInfo.subsystem == SDL_SYSWM_WINDOWS) {
+					return reinterpret_cast<intptr_t>(wmInfo.info.win.window);
+				}
+			}
+			return std::unexpected(SDL_GetError());
 		}
+
+		//virtual std::expected<std::vector<std::string>, std::string> getVulkanInstanceExtensions() const override {
+		//	u32 count;
+		//	SDL_Vulkan_GetInstanceExtensions(window_, &count, nullptr);
+		//	std::vector<const char*> arr(count);
+		//	SDL_Vulkan_GetInstanceExtensions(window_, &count, arr.data());
+		//	return arr 
+		//		| std::views::transform([](auto&& p) {	return std::string(p);}) 
+		//		| std::ranges::to<std::vector<std::string>>();
+		//	//return arr 
+		//	//	| std::views::transform(std::string{})
+		//	//	| std::ranges::to<std::vector<std::string>>();
+		//}
 	};
 }
 
