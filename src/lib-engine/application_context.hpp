@@ -3,6 +3,10 @@
 #include "engine80.hpp"
 #include <optional>
 
+namespace YAML {
+	class Node;
+}
+
 namespace qf {
 	class ApplicationContext;
 
@@ -17,6 +21,8 @@ namespace qf {
 			GetServiceByName(std::string const& serviceName) const = 0;
 
 		virtual std::optional<bool> getPropertyAsBool(const std::string_view& name) const = 0;
+
+		virtual std::optional<YAML::Node> getProperty(const std::string_view& name) const = 0;
 
 
 		//template<typename T>

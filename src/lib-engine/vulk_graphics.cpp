@@ -1,10 +1,10 @@
-#include "vulkan_graphics.hpp"
+#include "vulk_graphics.hpp"
 #include "vulk_physical_device.hpp"
 #include "vulk_logical_device.hpp"
 #include "vulk_surface.hpp"
 #include "application_context.hpp"
 #include "logger.hpp"
-
+#include <yaml-cpp/yaml.h>
 #include <ranges>
 #include <array>
 
@@ -17,6 +17,10 @@ namespace
 	static auto requiredDebugExtensions = { VK_EXT_DEBUG_UTILS_EXTENSION_NAME };
 	static auto validationLayers = { "VK_LAYER_KHRONOS_validation" };
 	static const std::string_view ENABLE_VALIDATION_PROPERTY_NAME{ "graphics.vulkan.enable-validation" };
+	static const std::string_view REQUIRED_VULKAN_EXTENSIONS_PROP_NAME{ "graphics.vulkan.required-extensions.vulkan" };
+	static const std::string_view REQUIRED_DEBUG_EXTENSIONS_PROP_NAME{ "graphics.vulkan.required-extensions.debug" };
+	static const std::string_view REQUIRED_DEVICE_EXTENSIONS_PROP_NAME{ "graphics.vulkan.required-extensions.device" };
+
 
 
 }
@@ -51,7 +55,15 @@ VulkanGraphics::VulkanGraphics(const CreateInstanceInfo& info)
 void VulkanGraphics::config()
 {
 	auto ctx = IApplicationContext::getContext();
+
+	auto node = ctx->getProperty(REQUIRED_VULKAN_EXTENSIONS_PROP_NAME).value_or(YAML::Node{});
+	if (node.IsSequence()) {
+		this->requiredExtensions_ = node.as<std::vector<std::string>>();
+	}
+
 	this->useVulkanValidation_ = ctx->getPropertyAsBool(ENABLE_VALIDATION_PROPERTY_NAME).value_or(false);
+
+
 }
 
 

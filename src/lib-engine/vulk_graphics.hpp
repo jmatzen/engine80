@@ -25,8 +25,12 @@ namespace qf::vulk
 		ptr<Surface> surface_{};
 		ptr<PhysicalDevice> physicalDevice_{};
 		ptr<LogicalDevice> logicalDevice_{};
+		std::vector<std::string> requiredExtensions_{};
+		std::vector<std::string> requiredDebugExtensions_{};
+		std::vector<std::string> validationLayers_{};
 
 		bool useVulkanValidation_ = false;
+
 
 		CreateInstanceInfo cii_;
 
