@@ -11,3 +11,7 @@ graphics:
     validation-layers:
     - VK_LAYER_KHRONOS_validation
     enable-validation: true
+    swapchain:
+      format:
+      - VK_FORMAT_B8G8R8A8_UNORM
+      - VK_FORMAT_B8G8R8A8_SRGB

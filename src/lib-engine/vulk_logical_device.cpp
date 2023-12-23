@@ -1,16 +1,31 @@
 #include "vulk_logical_device.hpp"
 #include "vulk_physical_device.hpp"
 #include "vulk_graphics.hpp"
+#include "vulk_surface.hpp"
+#include "vulk_swap_chain.hpp"
 
 #include <set>
 
+
 namespace qf::vulk
 {
+ 
+
+    LogicalDevice::LogicalDevice(PhysicalDevice& physicalDevice) :
+        physicalDevice_(physicalDevice.shared_from_this())
+    {
+    }
+
+    LogicalDevice::~LogicalDevice()
+    {
+        if (device_)
+            vkDestroyDevice(device_, nullptr);
+    }
 
 	Expected<ptr<LogicalDevice>> LogicalDevice::create(PhysicalDevice& device)
 	{
 		auto logicalDevice = std::make_shared<LogicalDevice>(device);
-		TRY_EXPR(logicalDevice->initialize());
+		TRY_EXPR_IGNORE_VALUE(logicalDevice->initialize());
 		return logicalDevice;
 	}
 
@@ -57,6 +72,8 @@ namespace qf::vulk
             createInfos.emplace_back(queueCreateInfo);
         }
 
+        physicalDevice->checkDeviceExtensionSupport();
+
         // Define the features that the logical device will support.
         VkPhysicalDeviceFeatures deviceFeatures{};
 
@@ -67,6 +84,8 @@ namespace qf::vulk
             .pQueueCreateInfos = createInfos.data(),
             .pEnabledFeatures = &deviceFeatures
         };
+        ci.enabledExtensionCount = 0;
+        ci.ppEnabledExtensionNames = 0;
 
         if (vkCreateDevice(physicalDevice->getVkPhysicalDevice(), &ci, nullptr, &device_) != VK_SUCCESS) {
             return std::unexpected("Failed to create logical device");
@@ -79,17 +98,6 @@ namespace qf::vulk
         // Return success if the logical device was created without any issues.
         return {};
     }
-
-	LogicalDevice::LogicalDevice(PhysicalDevice& physicalDevice) :
-		physicalDevice_(physicalDevice.shared_from_this()) 
-	{
-	}
-
-	LogicalDevice::~LogicalDevice()
-	{
-		if (device_)
-			vkDestroyDevice(device_, nullptr);
-	}
 
 
 }

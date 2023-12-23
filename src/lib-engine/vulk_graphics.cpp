@@ -13,16 +13,11 @@ using namespace qf::vulk;
 
 namespace
 {
-	static auto requiredVulkanExtensions = { "VK_KHR_surface", "VK_KHR_win32_surface"};
-	static auto requiredDebugExtensions = { VK_EXT_DEBUG_UTILS_EXTENSION_NAME };
-	static auto validationLayers = { "VK_LAYER_KHRONOS_validation" };
-	static const std::string_view ENABLE_VALIDATION_PROPERTY_NAME{ "graphics.vulkan.enable-validation" };
-	static const std::string_view REQUIRED_VULKAN_EXTENSIONS_PROP_NAME{ "graphics.vulkan.required-extensions.vulkan" };
-	static const std::string_view REQUIRED_DEBUG_EXTENSIONS_PROP_NAME{ "graphics.vulkan.required-extensions.debug" };
-	static const std::string_view REQUIRED_DEVICE_EXTENSIONS_PROP_NAME{ "graphics.vulkan.required-extensions.device" };
-
-
-
+	static constexpr std::string_view ENABLE_VALIDATION_PROPERTY_NAME{ "graphics.vulkan.enable-validation" };
+	static constexpr std::string_view REQUIRED_VULKAN_EXTENSIONS_PROP_NAME{ "graphics.vulkan.required-extensions.vulkan" };
+	static constexpr std::string_view REQUIRED_DEBUG_EXTENSIONS_PROP_NAME{ "graphics.vulkan.required-extensions.debug" };
+	static constexpr std::string_view REQUIRED_DEVICE_EXTENSIONS_PROP_NAME{ "graphics.vulkan.required-extensions.device" };
+	static constexpr std::string_view VALIDATION_LAYERS_PROPNAME{ "graphics.vulkan.validation-layers" };
 }
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -55,14 +50,12 @@ VulkanGraphics::VulkanGraphics(const CreateInstanceInfo& info)
 void VulkanGraphics::config()
 {
 	auto ctx = IApplicationContext::getContext();
+	static auto empty = YAML::Node{};
 
-	auto node = ctx->getProperty(REQUIRED_VULKAN_EXTENSIONS_PROP_NAME).value_or(YAML::Node{});
-	if (node.IsSequence()) {
-		this->requiredExtensions_ = node.as<std::vector<std::string>>();
-	}
-
-	this->useVulkanValidation_ = ctx->getPropertyAsBool(ENABLE_VALIDATION_PROPERTY_NAME).value_or(false);
-
+	this->requiredExtensions_ = ctx->getProperty(REQUIRED_VULKAN_EXTENSIONS_PROP_NAME).value_or(empty).as<std::vector<std::string>>();
+	this->requiredDebugExtensions_ = ctx->getProperty(REQUIRED_DEBUG_EXTENSIONS_PROP_NAME).value_or(empty).as<std::vector<std::string>>();
+	this->validationLayers_ = ctx->getProperty(VALIDATION_LAYERS_PROPNAME).value_or(empty).as<std::vector<std::string>>();
+	this->useVulkanValidation_ = ctx->getProperty(ENABLE_VALIDATION_PROPERTY_NAME).value_or(empty).as<bool>();
 
 }
 
@@ -70,11 +63,9 @@ void VulkanGraphics::config()
 Expected<void> VulkanGraphics::initialize()
 {
 	config();
-	TRY_EXPR(createInstance());
-	TRY_EXPR(setupDebugLogging());
-	TRY_EXPR_(surface_, Surface::create(*this));
-	TRY_EXPR_(physicalDevice_, PhysicalDevice::factory(*this));
-	TRY_EXPR_(logicalDevice_, LogicalDevice::create(*physicalDevice_));
+	TRY_EXPR_IGNORE_VALUE(createInstance());
+	TRY_EXPR_IGNORE_VALUE(setupDebugLogging());
+	TRY_EXPR(surface_, Surface::create(*this));
 	return {};
 }
 
@@ -98,7 +89,7 @@ bool VulkanGraphics::hasValidationLayerSupport() {
 Expected<void> VulkanGraphics::createInstance() {
 
 	Expected<std::vector<std::string>> extensions = getInstanceExtensions();
-	TRY_EXPR(extensions);
+	TRY_EXPR_IGNORE_VALUE(extensions);
 
 	log::info("extensions: {}", extensions.value());
 
@@ -121,17 +112,25 @@ Expected<void> VulkanGraphics::createInstance() {
 		.pApplicationInfo = &appInfo,
 	};
 
-	std::vector<const char *> requiredExtensions(requiredVulkanExtensions.begin(), requiredVulkanExtensions.end());
+	auto cstr = [](auto&& s) { return s.c_str(); };
+
+	auto requiredExtensions = requiredExtensions_
+		| std::views::transform(cstr)
+		| std::ranges::to<std::vector<const char*>>();
+
+	auto validationLayers = validationLayers_ 
+		| std::views::transform(cstr)
+		| std::ranges::to<std::vector<const char *>>();
 
 	if (useVulkanValidation_)
 	{
 		if (hasValidationLayerSupport())
 		{
-			for (auto const& e : requiredDebugExtensions) {
-				requiredExtensions.push_back(e);
+			for (auto const& e : requiredDebugExtensions_) {
+				requiredExtensions.push_back(e.c_str());
 			}
 			createInfo.enabledLayerCount = validationLayers.size();
-			createInfo.ppEnabledLayerNames = validationLayers.begin();
+			createInfo.ppEnabledLayerNames = validationLayers.data();
 		}
 		else
 		{
@@ -164,7 +163,7 @@ VulkanGraphics::~VulkanGraphics()
 
 bool VulkanGraphics::hasRequiredExtensions(const std::vector<std::string>& extensions)
 {
-	for (const auto& requiredExtension : requiredVulkanExtensions) {
+	for (const auto& requiredExtension : requiredExtensions_) {
 		if (std::find(extensions.begin(), extensions.end(), requiredExtension) == extensions.end()) {
 			return false; // Required extension not found
 		}
@@ -216,7 +215,7 @@ Expected<void> VulkanGraphics::pickPhysicalDevice()
 
 Expected<intptr_t> VulkanGraphics::getNativeWindowHandle() const {
 	intptr_t h;
-	TRY_EXPR_(h, cii_.pi.lock()->getNativeWindowHandle());
+	TRY_EXPR(h, cii_.pi.lock()->getNativeWindowHandle());
 	return h;
 }
 // --------------------------------------------------------------------------

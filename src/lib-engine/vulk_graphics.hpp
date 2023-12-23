@@ -1,5 +1,6 @@
 #include "graphics.hpp"
 #include "platform_interface.hpp"
+#include "vulk_result.hpp"
 #include <vulkan/vulkan.h>
 #include <optional>
 
@@ -9,9 +10,8 @@ namespace qf::vulk
 	class LogicalDevice;
 	class Surface;
 
-	std::string const& getStringForVkResult(VkResult value);
 
-	inline std::expected<void, std::string> vkchk(VkResult arg) {
+	inline std::expected<void, std::string_view> vkchk(VkResult arg) {
 		if (arg == VK_SUCCESS)
 			return {};
 		return std::unexpected(getStringForVkResult(arg));
@@ -25,6 +25,8 @@ namespace qf::vulk
 		ptr<Surface> surface_{};
 		ptr<PhysicalDevice> physicalDevice_{};
 		ptr<LogicalDevice> logicalDevice_{};
+
+		// some configuration values
 		std::vector<std::string> requiredExtensions_{};
 		std::vector<std::string> requiredDebugExtensions_{};
 		std::vector<std::string> validationLayers_{};
@@ -40,10 +42,10 @@ namespace qf::vulk
 		Expected<void> createInstance();
 
 		[[nodiscard]]
-		static Expected<std::vector<std::string>> getInstanceExtensions();
+		Expected<std::vector<std::string>> getInstanceExtensions();
 
 		[[nodiscard]]
-		static bool hasRequiredExtensions(const std::vector<std::string>& extensions);
+		bool hasRequiredExtensions(const std::vector<std::string>& extensions);
 
 		[[nodiscard]] 
 		static bool hasValidationLayerSupport();

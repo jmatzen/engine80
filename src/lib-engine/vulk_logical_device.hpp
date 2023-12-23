@@ -7,8 +7,9 @@ namespace qf::vulk
 {
 	class VulkanGraphics;
 	class PhysicalDevice;
+	class SwapChain;
 
-	class LogicalDevice
+	class LogicalDevice : EnableSharedFromThis<LogicalDevice>
 	{
 		VkDevice device_{};
 		VkQueue graphicsQueue_{};
@@ -16,8 +17,11 @@ namespace qf::vulk
 
 		weak<PhysicalDevice> physicalDevice_;
 		weak<VulkanGraphics> graphics_;
+		ptr<SwapChain> swapChain_;
 
 		Expected<void> initialize();
+
+
 	public:
 
 		LogicalDevice(PhysicalDevice& device);

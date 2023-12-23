@@ -49,16 +49,16 @@ struct std::formatter<std::vector<T>> {
 //};
 
 
-#define TRY_EXPR(expr) do { if (auto&& res = expr; not res.has_value()) return std::unexpected(Err(res.error().str())); } while (0); 
+#define TRY_EXPR_IGNORE_VALUE(expr) do { if (auto&& res = expr; not res.has_value()) return std::unexpected(Err(res.error().str())); } while (0); 
 
 
 /*
 * propagate a vkresult result as a string message error in a std::expected result
 */
-#define TRY_VKEXPR(expr) do { if (auto&& res = expr; res!=VK_SUCCESS) return std::unexpected(getStringForVkResult(res)); } while(0); 
+#define TRY_VKEXPR(expr) do { if (auto res = (expr); res!=VK_SUCCESS) return std::unexpected(std::string(getStringForVkResult(res))); } while(0); 
 
 
-#define TRY_EXPR_(var,expr) \
+#define TRY_EXPR(var,expr) \
 	do { \
 		auto temp = (expr); \
 		if (!temp.has_value()) \
@@ -164,24 +164,36 @@ namespace qf
 
 	};
 
-
+	/**
+	 * @brief A base class that enables shared ownership and access to the derived class instance.
+	 *
+	 * This class is used as a base class for classes that need to provide shared ownership and access to the derived class
+	 * instance. It inherits from `std::enable_shared_from_this` and `NonCopyable` to enforce non-copyability.
+	 *
+	 * @tparam T The derived class type.
+	 */
 	template<typename T>
 	class EnableSharedFromThis 
 		: public std::enable_shared_from_this<T>
 		, public NonCopyable {
 	public:
+		/**
+		 * @brief Default destructor.
+		 */
 		virtual ~EnableSharedFromThis() = default;
 
-		template<typename U>
+		/**
+		 * @brief Returns a shared pointer to the derived class instance.
+		 *
+		 * This method returns a shared pointer to the derived class instance, casted to the specified type `U`.
+		 *
+		 * @tparam U The type to cast the shared pointer to.
+		 * @return A shared pointer to the derived class instance.
+		 */
+		template<typename U=T>
 		ptr<U> sharedFromThis() {
 			return std::static_pointer_cast<U>(this->shared_from_this());
 		}
-
-		template<typename U>
-		ptr<U> staticCast() {
-			return std::static_pointer_cast<U>(this->shared_from_this());
-		}
-
 
 	};
 
