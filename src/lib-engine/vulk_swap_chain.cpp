@@ -1,9 +1,14 @@
+
 #include "vulk_swap_chain.hpp"
 #include "vulk_physical_device.hpp"
+#include "vulk_logical_device.hpp"
 #include "vulk_surface.hpp"
 #include "application_context.hpp"
+#include "vulk_graphics.hpp"
+#include "platform_interface.hpp"
 #include <yaml-cpp/yaml.h>
 #include <ranges>
+#include <limits>
 
 namespace qf::vulk
 {
@@ -31,37 +36,85 @@ namespace qf::vulk
 		return details;
 	}
 
-	auto SwapChain::createSwapChain(PhysicalDevice& device) -> Expected<ptr<SwapChain>> {
+	auto SwapChain::createSwapChain(LogicalDevice& logicalDevice) -> Expected<Box<SwapChain>> {
+
+		auto& physicalDevice = logicalDevice.getPhysicalDevice();
 
 		SwapChainSupportDetails details;
-		auto surface = device.getSurface();
+		auto surface = physicalDevice.getSurface();
 		TRY_EXPR(details, SwapChain::querySwapChainSupport(
-			device.getVkPhysicalDevice(),
+			physicalDevice,
 			surface->getSurface()
 		));
 
 
 		VkSurfaceFormatKHR surfaceFormat;
 		TRY_EXPR(surfaceFormat, chooseSwapSurfaceFormat(details.formats));
-		VkPresentModeKHR presentMode;
-		TRY_EXPR(presentMode, chooseSwapPresentMode(details.presentModes));
-		//VkExtent2D extent = chooseSwapExtent(details.capabilities, 0, 0);
 
-		return {};
+		VkPresentModeKHR presentMode = chooseSwapPresentMode(details.presentModes);
+
+		auto [width, height] = physicalDevice.getGraphics()
+			.getPlatform()
+			.value()->getWindowExtents()
+			.value();
+
+		VkExtent2D extent = chooseSwapExtent(details.capabilities, width, height);
+
+		uint32_t imageCount = details.capabilities.minImageCount + 1;
+
+		if (details.capabilities.maxImageCount > 0 && imageCount > details.capabilities.maxImageCount) {
+			imageCount = details.capabilities.maxImageCount;
+		}
+
+		VkSwapchainCreateInfoKHR createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+		createInfo.surface = surface->getSurface();
+		createInfo.minImageCount = imageCount;
+		createInfo.imageFormat = surfaceFormat.format;
+		createInfo.imageColorSpace = surfaceFormat.colorSpace;
+		createInfo.imageExtent = extent;
+		createInfo.imageArrayLayers = 1;
+		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+		auto indices = physicalDevice.findQueueFamilies().value();
+		uint32_t queueFamilyIndices[] = { indices.graphics.front(), indices.graphics.front() };
+
+		if (queueFamilyIndices[0] != queueFamilyIndices[1]) {
+			createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+			createInfo.queueFamilyIndexCount = 2;
+			createInfo.pQueueFamilyIndices = queueFamilyIndices;
+		}
+		else {
+			createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+			createInfo.queueFamilyIndexCount = 0; // Optional
+			createInfo.pQueueFamilyIndices = nullptr; // Optional
+		}
+		createInfo.preTransform = details.capabilities.currentTransform;
+		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+		createInfo.presentMode = presentMode;
+		createInfo.clipped = VK_TRUE;
+		createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+		VkSwapchainKHR swapChain;
+		TRY_VKEXPR(vkCreateSwapchainKHR(logicalDevice.getHandle(), &createInfo, nullptr, &swapChain));
+
+		return makeBox<SwapChain>(swapChain, logicalDevice);
 	}
 
-	SwapChain::SwapChain(VkSwapchainKHR const swapChain, PhysicalDevice& device) 
+	SwapChain::SwapChain(VkSwapchainKHR const swapChain, LogicalDevice& device) 
 		: swapChain(swapChain)
-		, physicalDevice(device.sharedFromThis())
+		, logicalDevice(device.sharedFromThis())
 	{
 
 	}
 
 	SwapChain::~SwapChain()
 	{
-
 	}
 
+	void SwapChain::dispose() {
+		vkDestroySwapchainKHR(logicalDevice.lock()->getHandle(), swapChain, nullptr);
+	}
 
 	Expected<VkSurfaceFormatKHR> SwapChain::chooseSwapSurfaceFormat(const std::span<VkSurfaceFormatKHR>& availableFormats)
 	{
@@ -70,7 +123,7 @@ namespace qf::vulk
 			.as<std::vector<std::string>>();
 
 		auto surfaceFormats = formats
-			| std::views::transform(getVkFormatFromString)
+			| std::views::transform(getVkValue<VkFormat>)
 			| std::views::transform([&](auto&& format) {
 					auto it = std::find_if(
 						availableFormats.begin(),
@@ -90,10 +143,35 @@ namespace qf::vulk
 		return surfaceFormats.front();
 	}
 
-	Expected<VkPresentModeKHR> SwapChain::chooseSwapPresentMode(const std::span<VkPresentModeKHR>& availablePresentModes)
+	VkPresentModeKHR SwapChain::chooseSwapPresentMode(const std::span<VkPresentModeKHR>& availablePresentModes)
 	{
+		for (const auto& availablePresentMode : availablePresentModes) {
+			if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
+				return availablePresentMode;
+			}
+		}
+
+		return VK_PRESENT_MODE_FIFO_KHR;
+	}
+
+	VkExtent2D SwapChain::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, int width, int height) {
+		if (capabilities.currentExtent.width != std::numeric_limits<u32>::max()) {
+			return capabilities.currentExtent;
+		}
+
+		VkExtent2D actualExtent = {
+			static_cast<uint32_t>(width),
+			static_cast<uint32_t>(height)
+		};
+
+		actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+		actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+
+		return actualExtent;
 		return {};
 	}
+
+
 }
 
 

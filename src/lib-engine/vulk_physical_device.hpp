@@ -19,7 +19,6 @@ namespace qf::vulk
 		const weak<VulkanGraphics> graphics{};
 		const weak<Surface> surface{};
 		ptr<LogicalDevice> logicalDevice{};
-		ptr<SwapChain> swapChain{};
 
 		Expected<void> initialize();
 
@@ -65,6 +64,8 @@ namespace qf::vulk
 
 		~PhysicalDevice();
 
+		void dispose() override;
+
 		struct QueueFamilyIndices {
 			std::vector<u32> graphics;
 			std::vector<u32> present;
@@ -76,13 +77,14 @@ namespace qf::vulk
 
 		VkPhysicalDevice getVkPhysicalDevice() const { return vkPhysicalDeviceHandle; }
 
-		static Expected<ptr<PhysicalDevice>> create(VulkanGraphics& instance, Surface& surface);
+		static Expected<Box<PhysicalDevice>> create(VulkanGraphics& instance, Surface& surface);
 
-		Graphics& getGraphics() const;
+		VulkanGraphics& getGraphics() const;
 
 		ptr<Surface> getSurface() const { return surface.lock(); }
 
 		Expected<SwapChainSupportDetails> querySwapChainSupport() const;
 
+		operator VkPhysicalDevice() const { return vkPhysicalDeviceHandle; }
 	};
 }

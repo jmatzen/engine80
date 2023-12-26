@@ -1,4 +1,5 @@
 #include "engine80.hpp"
+#include "vulk_result.hpp"
 #include <vulkan/vulkan.h>
 #include <unordered_map>
 
@@ -400,4 +401,17 @@ namespace qf::vulk {
 		return it == vkReverseFormatMap.end() ? VK_FORMAT_UNDEFINED : it->second;
 	}
 
+
+	//template<>
+	//struct getVkValue<VkFormat> {
+	//	VkFormat operator()(const std::string_view& name) {
+	//		return getVkFormatFromString(name);
+	//	}
+	//};
+
+	template<>
+	VkFormat getVkValue(const std::string_view& name) {
+		return getVkFormatFromString(name);
+	}
 }
+

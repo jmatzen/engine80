@@ -9,38 +9,41 @@ namespace qf::vulk
 
 
 	Surface::Surface(VulkanGraphics& graphics)
-		: graphics_(graphics.sharedFromThis<VulkanGraphics>())
+		: graphics_(graphics)
 	{
 	}
 
 	Surface::~Surface()
 	{
-		vkDestroySurfaceKHR(graphics_.lock()->getInstance().value(),
+	}
+
+	void Surface::dispose() {
+		physicalDevice_.reset();
+		vkDestroySurfaceKHR(graphics_.getInstance().value(),
 			surface_,
 			nullptr);
 	}
 
-	Expected<ptr<Surface>> Surface::create(VulkanGraphics& graphics) {
-		auto surfaceObj = std::make_shared<Surface>(graphics);
+
+	Expected<Box<Surface>> Surface::create(VulkanGraphics& graphics) {
+		auto surfaceObj = std::make_unique<Surface>(graphics);
 		surfaceObj->initialize();
 		return surfaceObj;
 	}
 
 	Expected<void> Surface::initialize() {
-		auto graphics = graphics_.lock();
-
 		VkWin32SurfaceCreateInfoKHR ci{
 			.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
 			.hinstance = GetModuleHandle(nullptr),
-			.hwnd = reinterpret_cast<HWND>(graphics->getNativeWindowHandle().value()),
+			.hwnd = reinterpret_cast<HWND>(graphics_.getNativeWindowHandle().value()),
 		};
 
-		TRY_VKEXPR(vkCreateWin32SurfaceKHR(graphics->getInstance().value(), &ci, nullptr, &surface_));
+		TRY_VKEXPR(vkCreateWin32SurfaceKHR(graphics_.getInstance().value(), &ci, nullptr, &surface_));
 		TRY_EXPR(this->physicalDevice_, createPhysicalDevice());
 		return {};
 	}
 
-	Expected<ptr<PhysicalDevice>> Surface::createPhysicalDevice() {
-		return PhysicalDevice::create(*graphics_.lock(), *this).value();
+	Expected<Box<PhysicalDevice>> Surface::createPhysicalDevice() {
+		return PhysicalDevice::create(graphics_, *this).value();
 	}
 }

@@ -3,6 +3,7 @@
 #include "engine80.hpp"
 
 #include <vector>
+#include <optional>
 
 namespace qf 
 {
@@ -18,8 +19,8 @@ namespace qf
 		virtual bool update(float timeDelta) = 0;
 
 		virtual Expected<intptr_t> getNativeWindowHandle() const = 0;
+
+		virtual std::optional<std::tuple<int, int>> getWindowExtents() const = 0;
 	};
 
 }
-
-

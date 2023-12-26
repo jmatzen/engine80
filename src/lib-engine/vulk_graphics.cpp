@@ -56,6 +56,7 @@ void VulkanGraphics::config()
 	this->requiredDebugExtensions_ = ctx->getProperty(REQUIRED_DEBUG_EXTENSIONS_PROP_NAME).value_or(empty).as<std::vector<std::string>>();
 	this->validationLayers_ = ctx->getProperty(VALIDATION_LAYERS_PROPNAME).value_or(empty).as<std::vector<std::string>>();
 	this->useVulkanValidation_ = ctx->getProperty(ENABLE_VALIDATION_PROPERTY_NAME).value_or(empty).as<bool>();
+	this->requirdDeviceExtensions_ = ctx->getProperty(REQUIRED_DEVICE_EXTENSIONS_PROP_NAME).value_or(empty).as<std::vector<std::string>>();
 
 }
 
@@ -150,6 +151,11 @@ Expected<void> VulkanGraphics::createInstance() {
 
 VulkanGraphics::~VulkanGraphics() 
 {
+}
+
+void VulkanGraphics::dispose() {
+	surface_.reset();
+
 	if (debugMessenger_) {
 		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance_, "vkDestroyDebugUtilsMessengerEXT");
 		if (func) {
@@ -159,6 +165,7 @@ VulkanGraphics::~VulkanGraphics()
 	if (instance_) {
 		vkDestroyInstance(instance_, nullptr);
 	}
+
 }
 
 bool VulkanGraphics::hasRequiredExtensions(const std::vector<std::string>& extensions)
@@ -218,11 +225,18 @@ Expected<intptr_t> VulkanGraphics::getNativeWindowHandle() const {
 	TRY_EXPR(h, cii_.pi.lock()->getNativeWindowHandle());
 	return h;
 }
+
+std::optional<ptr<PlatformInterface>> VulkanGraphics::getPlatform() const {
+	auto pi = cii_.pi.lock();
+	if (pi)
+		return pi;
+	return std::nullopt;
+}
 // --------------------------------------------------------------------------
 
 template<>
 ptr<Graphics> Graphics::createInstance<VulkanGraphics>(const CreateInstanceInfo& info) {
-	auto g = std::make_shared<VulkanGraphics>(info);
+	auto g = makeShared<VulkanGraphics>(info);
 	return g;
 }
 

@@ -32,10 +32,15 @@ PhysicalDevice::PhysicalDevice(VulkanGraphics& graphics, Surface& surface, VkPhy
 
 PhysicalDevice::~PhysicalDevice()
 {
-	// no explicit cleanup necessary because the context is destroyed when the instance is destroyed.
+
 }
 
-Expected<ptr<PhysicalDevice>> PhysicalDevice::create(VulkanGraphics& graphics, Surface& surface)
+void PhysicalDevice::dispose() {
+	logicalDevice.reset();
+}
+
+
+Expected<Box<PhysicalDevice>> PhysicalDevice::create(VulkanGraphics& graphics, Surface& surface)
 {
 
 	u32 count = 0;
@@ -59,14 +64,13 @@ Expected<ptr<PhysicalDevice>> PhysicalDevice::create(VulkanGraphics& graphics, S
 		return std::unexpected("unable to find a suitable physical device");
 	}
 
-	auto physicalDevice = std::make_shared<PhysicalDevice>(graphics, surface, devices.front());
+	auto physicalDevice = makeBox<PhysicalDevice>(graphics, surface, devices.front());
 
 	/*
 	* now create the logical device
 	*/
 	TRY_EXPR(physicalDevice->logicalDevice, LogicalDevice::create(*physicalDevice));
 
-	TRY_EXPR(physicalDevice->swapChain, SwapChain::createSwapChain(*physicalDevice));
 
 	return physicalDevice;
 
@@ -101,7 +105,7 @@ auto PhysicalDevice::findQueueFamilies(VkQueueFlagBits flagBits) const -> Expect
 	return result;
 }
 
-Graphics& PhysicalDevice::getGraphics() const {
+VulkanGraphics& PhysicalDevice::getGraphics() const {
 	return *graphics.lock();
 }
 

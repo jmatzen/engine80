@@ -63,7 +63,7 @@ struct std::formatter<std::vector<T>> {
 		auto temp = (expr); \
 		if (!temp.has_value()) \
 		return std::unexpected(temp.error()); \
-		var = temp.value(); \
+		var = std::move(temp.value()); \
 	} while (0);
 
 namespace qf {
@@ -80,7 +80,12 @@ namespace qf {
 	using ptr = std::shared_ptr<T>;
 
 	template<typename T>
-	using up = std::unique_ptr<T>;
+	using Box = std::unique_ptr<T>;
+
+	template<typename T, typename... Args>
+	Box<T> makeBox(Args&&... args) {
+		return std::make_unique<T>(std::forward<Args>(args)...);
+	}
 
 	template<typename T>
 	using weak = std::weak_ptr<T>;
@@ -180,7 +185,10 @@ namespace qf
 		/**
 		 * @brief Default destructor.
 		 */
-		virtual ~EnableSharedFromThis() = default;
+		virtual ~EnableSharedFromThis()
+		{
+
+		}
 
 		/**
 		 * @brief Returns a shared pointer to the derived class instance.
@@ -195,8 +203,21 @@ namespace qf
 			return std::static_pointer_cast<U>(this->shared_from_this());
 		}
 
+		virtual void dispose() {};
+
 	};
 
+	template<typename T>
+	struct Deleter_ {
+		void operator()(T* p) const {
+			if(p)
+				p->dispose();
+		}
+	};
+	template<typename T, typename... Args>
+	std::shared_ptr<T> makeShared(Args&&... args) {
+		return std::shared_ptr<T>(new T(args...), Deleter_<T>());
+	}
 
 	class Serializable : public EnableSharedFromThis<Serializable> {
 	public:

@@ -66,6 +66,13 @@ namespace qf {
 			return std::unexpected(SDL_GetError());
 		}
 
+		virtual std::optional<std::tuple<int, int>> getWindowExtents() const override {
+			int w, h;
+			if (!window_)
+				return std::nullopt;
+			SDL_GetWindowSize(window_, &w, &h);
+			return std::make_tuple(w, h);
+		}
 		//virtual std::expected<std::vector<std::string>, std::string> getVulkanInstanceExtensions() const override {
 		//	u32 count;
 		//	SDL_Vulkan_GetInstanceExtensions(window_, &count, nullptr);

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "graphics.hpp"
 #include "platform_interface.hpp"
 #include "vulk_result.hpp"
@@ -22,14 +24,12 @@ namespace qf::vulk
 
 		VkInstance instance_{};
 		VkDebugUtilsMessengerEXT debugMessenger_{};
-		ptr<Surface> surface_{};
-		ptr<PhysicalDevice> physicalDevice_{};
-		ptr<LogicalDevice> logicalDevice_{};
+		Box<Surface> surface_{};
 
-		// some configuration values
 		std::vector<std::string> requiredExtensions_{};
 		std::vector<std::string> requiredDebugExtensions_{};
 		std::vector<std::string> validationLayers_{};
+		std::vector<std::string> requirdDeviceExtensions_{};
 
 		bool useVulkanValidation_ = false;
 
@@ -60,6 +60,7 @@ namespace qf::vulk
 	public:
 		VulkanGraphics(const CreateInstanceInfo& info);
 		virtual ~VulkanGraphics() override;
+		void dispose() override;
 
 		virtual Expected<void> initialize() override;
 
@@ -72,15 +73,13 @@ namespace qf::vulk
 
 		Expected<intptr_t> getNativeWindowHandle() const;
 
-		std::optional<ptr<PhysicalDevice>> getPhysicalDevice() {
-			if (physicalDevice_)
-				return physicalDevice_;
-			return std::nullopt;
+		virtual std::optional<ptr<PlatformInterface>> getPlatform() const override;
+
+		const Surface& getSurface() const {
+			return *surface_;
 		}
 
-		const ptr<Surface>& getSurface() const {
-			return surface_;
-		}
+		auto& getRequiredDeviceExtensions() const { return requirdDeviceExtensions_; }
 
 	};
 }

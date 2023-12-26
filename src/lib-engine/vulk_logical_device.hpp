@@ -2,6 +2,8 @@
 
 #include "engine80.hpp"
 #include <vulkan/vulkan.h>
+#include <optional>
+#include <string>
 
 namespace qf::vulk
 {
@@ -9,17 +11,20 @@ namespace qf::vulk
 	class PhysicalDevice;
 	class SwapChain;
 
-	class LogicalDevice : EnableSharedFromThis<LogicalDevice>
+	class LogicalDevice : public EnableSharedFromThis<LogicalDevice>
 	{
 		VkDevice device_{};
 		VkQueue graphicsQueue_{};
 		VkQueue presentQueue_{};
 
-		weak<PhysicalDevice> physicalDevice_;
-		weak<VulkanGraphics> graphics_;
-		ptr<SwapChain> swapChain_;
+		PhysicalDevice& physicalDevice_;
+		Box<SwapChain> swapChain_;
+
+		std::vector<std::string> requiredDeviceExtensions_;
 
 		Expected<void> initialize();
+		Expected<void> checkDeviceExtensionSupport() const;
+
 
 
 	public:
@@ -28,7 +33,13 @@ namespace qf::vulk
 
 		~LogicalDevice();
 
-		static Expected<ptr<LogicalDevice>> create(PhysicalDevice& device);
+		void dispose() override;
+
+		static Expected<Box<LogicalDevice>> create(PhysicalDevice& device);
+
+		PhysicalDevice& getPhysicalDevice() const { return physicalDevice_; }
+
+		VkDevice getHandle() const { return device_; }
 
 	};
 }

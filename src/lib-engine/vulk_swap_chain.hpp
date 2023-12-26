@@ -8,13 +8,13 @@
 
 namespace qf::vulk
 {
-    class PhysicalDevice;
+    class LogicalDevice;
 
 
-    class SwapChain : EnableSharedFromThis<SwapChain>
+    class SwapChain : public EnableSharedFromThis<SwapChain>
     {
         VkSwapchainKHR const swapChain{};
-        weak<PhysicalDevice> const physicalDevice{};
+        weak<LogicalDevice> const logicalDevice{};
 
     public:
         /**
@@ -24,13 +24,15 @@ namespace qf::vulk
          * @param device The Vulkan logical device.
          * @param surface The Vulkan surface.
          */
-        SwapChain(VkSwapchainKHR swapChain, PhysicalDevice& device);
+        SwapChain(VkSwapchainKHR swapChain, LogicalDevice& device);
 
         /**
          * Destructor.
          * Cleans up the SwapChain object.
          */
         ~SwapChain();
+
+        void dispose() override;
 
         /**
          * Getter method to retrieve the Vulkan swap chain handle.
@@ -66,7 +68,7 @@ namespace qf::vulk
          * @param device The Vulkan logical device.
          * @param surface The Vulkan surface.
          */
-        static Expected<ptr<SwapChain>> createSwapChain(PhysicalDevice& device);
+        static Expected<Box<SwapChain>> createSwapChain(LogicalDevice& device);
 
         /**
          * Method to destroy the swap chain using the specified Vulkan device.
@@ -93,7 +95,7 @@ namespace qf::vulk
          * @param availablePresentModes The available presentation modes.
          * @return The chosen presentation mode for the swap chain.
          */
-        static Expected<VkPresentModeKHR> chooseSwapPresentMode(const std::span<VkPresentModeKHR>& availablePresentModes);
+        static VkPresentModeKHR chooseSwapPresentMode(const std::span<VkPresentModeKHR>& availablePresentModes);
 
         /**
          * Helper method to choose the extent (width and height) of the swap chain images.

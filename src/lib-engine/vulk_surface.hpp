@@ -11,13 +11,13 @@ namespace qf::vulk
 	class Surface : public EnableSharedFromThis<Surface>
 	{
 		VkSurfaceKHR surface_{};
-		weak<VulkanGraphics> graphics_;
-		ptr<PhysicalDevice> physicalDevice_;
+		VulkanGraphics& graphics_;
+		Box<PhysicalDevice> physicalDevice_;
 
 
 
 		Expected<void> initialize();
-		Expected<ptr<PhysicalDevice>> createPhysicalDevice();
+		Expected<Box<PhysicalDevice>> createPhysicalDevice();
 
 	public:
 
@@ -25,7 +25,9 @@ namespace qf::vulk
 
 		~Surface();
 
-		static Expected<ptr<Surface>> create(VulkanGraphics& graphics);
+		void dispose();
+
+		static Expected<Box<Surface>> create(VulkanGraphics& graphics);
 
 		VkSurfaceKHR getSurface() const { return surface_; }
 
