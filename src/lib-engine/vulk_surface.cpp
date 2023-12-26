@@ -1,6 +1,7 @@
 #include "vulk_surface.hpp"
 #include "vulk_physical_device.hpp"
 #include "vulk_graphics.hpp"
+#include "vulk_logical_device.hpp"
 
 #include <set>
 
@@ -15,15 +16,11 @@ namespace qf::vulk
 
 	Surface::~Surface()
 	{
-	}
-
-	void Surface::dispose() {
 		physicalDevice_.reset();
 		vkDestroySurfaceKHR(graphics_.getInstance().value(),
 			surface_,
 			nullptr);
 	}
-
 
 	Expected<Box<Surface>> Surface::create(VulkanGraphics& graphics) {
 		auto surfaceObj = std::make_unique<Surface>(graphics);

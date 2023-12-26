@@ -8,7 +8,7 @@ namespace qf::vulk
 	class VulkanGraphics;
 	class PhysicalDevice;
 
-	class Surface : public EnableSharedFromThis<Surface>
+	class Surface : NonCopyable
 	{
 		VkSurfaceKHR surface_{};
 		VulkanGraphics& graphics_;
@@ -24,8 +24,6 @@ namespace qf::vulk
 		Surface(VulkanGraphics& graphics);
 
 		~Surface();
-
-		void dispose();
 
 		static Expected<Box<Surface>> create(VulkanGraphics& graphics);
 

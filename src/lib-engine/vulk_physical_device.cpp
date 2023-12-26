@@ -25,20 +25,15 @@ namespace
 
 PhysicalDevice::PhysicalDevice(VulkanGraphics& graphics, Surface& surface, VkPhysicalDevice deviceHandle)
 	: vkPhysicalDeviceHandle(deviceHandle)
-	, graphics(graphics.sharedFromThis<VulkanGraphics>())
-	, surface(surface.sharedFromThis<Surface>())
+	, graphics(graphics)
+	, surface(surface)
 {
 }
 
 PhysicalDevice::~PhysicalDevice()
 {
-
-}
-
-void PhysicalDevice::dispose() {
 	logicalDevice.reset();
 }
-
 
 Expected<Box<PhysicalDevice>> PhysicalDevice::create(VulkanGraphics& graphics, Surface& surface)
 {
@@ -96,7 +91,7 @@ auto PhysicalDevice::findQueueFamilies(VkQueueFlagBits flagBits) const -> Expect
 			result.graphics.emplace_back(i);
 		}
 		VkBool32 presentSupport{};
-		TRY_VKEXPR(vkGetPhysicalDeviceSurfaceSupportKHR(vkPhysicalDeviceHandle, i, surface.lock()->getSurface(), &presentSupport));
+		TRY_VKEXPR(vkGetPhysicalDeviceSurfaceSupportKHR(vkPhysicalDeviceHandle, i, surface.getSurface(), &presentSupport));
 		if (presentSupport) {
 			result.present.emplace_back(i);
 		}
@@ -106,11 +101,11 @@ auto PhysicalDevice::findQueueFamilies(VkQueueFlagBits flagBits) const -> Expect
 }
 
 VulkanGraphics& PhysicalDevice::getGraphics() const {
-	return *graphics.lock();
+	return graphics;
 }
 
 auto PhysicalDevice::querySwapChainSupport() const -> Expected<SwapChainSupportDetails> {
-	VkSurfaceKHR const surface = this->getSurface()->getSurface();
+	VkSurfaceKHR const surface = getSurface().getSurface();
 	return SwapChain::querySwapChainSupport(vkPhysicalDeviceHandle, surface);
 }
 

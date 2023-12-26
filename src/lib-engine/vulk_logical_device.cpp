@@ -24,9 +24,6 @@ namespace qf::vulk
 
     LogicalDevice::~LogicalDevice()
     {
-    }
-
-    void LogicalDevice::dispose() {
         swapChain_.reset();
         if (device_)
             vkDestroyDevice(device_, nullptr);

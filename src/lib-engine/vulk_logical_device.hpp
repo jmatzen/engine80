@@ -11,7 +11,7 @@ namespace qf::vulk
 	class PhysicalDevice;
 	class SwapChain;
 
-	class LogicalDevice : public EnableSharedFromThis<LogicalDevice>
+	class LogicalDevice : NonCopyable
 	{
 		VkDevice device_{};
 		VkQueue graphicsQueue_{};
@@ -32,8 +32,6 @@ namespace qf::vulk
 		LogicalDevice(PhysicalDevice& device);
 
 		~LogicalDevice();
-
-		void dispose() override;
 
 		static Expected<Box<LogicalDevice>> create(PhysicalDevice& device);
 

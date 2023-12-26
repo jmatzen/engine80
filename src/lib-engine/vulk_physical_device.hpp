@@ -13,12 +13,12 @@ namespace qf::vulk
 	struct SwapChainSupportDetails;
 
 
-	class PhysicalDevice : public EnableSharedFromThis<PhysicalDevice>
+	class PhysicalDevice : NonCopyable
 	{
 		const VkPhysicalDevice vkPhysicalDeviceHandle{};
-		const weak<VulkanGraphics> graphics{};
-		const weak<Surface> surface{};
-		ptr<LogicalDevice> logicalDevice{};
+		VulkanGraphics& graphics;
+		Surface& surface;
+		Box<LogicalDevice> logicalDevice{};
 
 		Expected<void> initialize();
 
@@ -64,8 +64,6 @@ namespace qf::vulk
 
 		~PhysicalDevice();
 
-		void dispose() override;
-
 		struct QueueFamilyIndices {
 			std::vector<u32> graphics;
 			std::vector<u32> present;
@@ -81,7 +79,7 @@ namespace qf::vulk
 
 		VulkanGraphics& getGraphics() const;
 
-		ptr<Surface> getSurface() const { return surface.lock(); }
+		Surface& getSurface() const { return surface; }
 
 		Expected<SwapChainSupportDetails> querySwapChainSupport() const;
 

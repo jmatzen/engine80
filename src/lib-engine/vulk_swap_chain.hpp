@@ -11,10 +11,10 @@ namespace qf::vulk
     class LogicalDevice;
 
 
-    class SwapChain : public EnableSharedFromThis<SwapChain>
+    class SwapChain : NonCopyable
     {
         VkSwapchainKHR const swapChain{};
-        weak<LogicalDevice> const logicalDevice{};
+        LogicalDevice& logicalDevice;
 
     public:
         /**
@@ -31,8 +31,6 @@ namespace qf::vulk
          * Cleans up the SwapChain object.
          */
         ~SwapChain();
-
-        void dispose() override;
 
         /**
          * Getter method to retrieve the Vulkan swap chain handle.

@@ -151,9 +151,6 @@ Expected<void> VulkanGraphics::createInstance() {
 
 VulkanGraphics::~VulkanGraphics() 
 {
-}
-
-void VulkanGraphics::dispose() {
 	surface_.reset();
 
 	if (debugMessenger_) {
@@ -162,10 +159,14 @@ void VulkanGraphics::dispose() {
 			func(instance_, debugMessenger_, nullptr);
 		}
 	}
+
 	if (instance_) {
 		vkDestroyInstance(instance_, nullptr);
 	}
 
+}
+
+void VulkanGraphics::dispose() {
 }
 
 bool VulkanGraphics::hasRequiredExtensions(const std::vector<std::string>& extensions)

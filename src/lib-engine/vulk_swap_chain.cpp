@@ -41,10 +41,10 @@ namespace qf::vulk
 		auto& physicalDevice = logicalDevice.getPhysicalDevice();
 
 		SwapChainSupportDetails details;
-		auto surface = physicalDevice.getSurface();
+		auto& surface = physicalDevice.getSurface();
 		TRY_EXPR(details, SwapChain::querySwapChainSupport(
 			physicalDevice,
-			surface->getSurface()
+			surface.getSurface()
 		));
 
 
@@ -68,7 +68,7 @@ namespace qf::vulk
 
 		VkSwapchainCreateInfoKHR createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-		createInfo.surface = surface->getSurface();
+		createInfo.surface = surface.getSurface();
 		createInfo.minImageCount = imageCount;
 		createInfo.imageFormat = surfaceFormat.format;
 		createInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -103,17 +103,14 @@ namespace qf::vulk
 
 	SwapChain::SwapChain(VkSwapchainKHR const swapChain, LogicalDevice& device) 
 		: swapChain(swapChain)
-		, logicalDevice(device.sharedFromThis())
+		, logicalDevice(device)
 	{
 
 	}
 
 	SwapChain::~SwapChain()
 	{
-	}
-
-	void SwapChain::dispose() {
-		vkDestroySwapchainKHR(logicalDevice.lock()->getHandle(), swapChain, nullptr);
+		vkDestroySwapchainKHR(logicalDevice.getHandle(), swapChain, nullptr);
 	}
 
 	Expected<VkSurfaceFormatKHR> SwapChain::chooseSwapSurfaceFormat(const std::span<VkSurfaceFormatKHR>& availableFormats)
